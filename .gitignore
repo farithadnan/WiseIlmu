@@ -1,5 +1,15 @@
+# byte-compiled / optimized / DLL files
+__pycache__/
+
+# Config files
+/config/*.yaml
+
 # virtual environment
 /venv
 
-# LLM models
-/models/*
+# documents directory
+/Documents/*
+
+# Logs
+/outputs
+
