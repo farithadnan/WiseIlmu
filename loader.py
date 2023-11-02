@@ -19,10 +19,15 @@ class DocHandler:
         Returns:
             Vector representation of the documents.
         '''
-        documents = self.process_docs(document_dir, chunk_size, chunk_overlap)
-        embeddings = SentenceTransformerEmbeddings(model_name=embedding_model)
-        db = Chroma.from_documents(documents, embeddings)
-        return db
+        try:
+            documents = self.process_docs(document_dir, chunk_size, chunk_overlap)
+            embeddings = SentenceTransformerEmbeddings(model_name=embedding_model)
+            db = Chroma.from_documents(documents, embeddings)
+            return db
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Directory {document_dir} not found: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Error while fetching vector representation of the documents: {e}")
 
 
     def process_docs(self, document_dir: str, chunk_size=1000, chunk_overlap=20):
@@ -36,12 +41,18 @@ class DocHandler:
         Returns:
             List of documents.
         '''
-        # Load documents
-        loader = DirectoryLoader(document_dir)
-        documents = loader.load()
-        # Split documents into chunks
-        text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-        docs = text_splitter.split_documents(documents=documents)
+        try:
+            # Load documents
+            loader = DirectoryLoader(document_dir)
+            documents = loader.load()
+            # Split documents into chunks
+            text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
+            docs = text_splitter.split_documents(documents=documents)
 
-        return docs
+            return docs
+        except FileNotFoundError as e:
+            raise FileNotFoundError(f"Directory {document_dir} not found: {e}")
+        except Exception as e:
+            raise RuntimeError(f"Error while loading & splitting the documents: {e}")
+
     
