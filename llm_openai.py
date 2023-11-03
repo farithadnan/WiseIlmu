@@ -33,6 +33,6 @@ class OpenAIHandler:
         Returns:
             The Q & A chain.
         '''
-        llm = self.load_model(self.cfg)
+        llm = self.load_model()
         return load_qa_chain(llm=llm, chain_type=chain_type, verbose=verbose)
 
