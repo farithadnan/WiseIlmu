@@ -8,7 +8,7 @@ WiseIlmu is a Python application that leverages large language models (LLMs) lik
 
 Open Git bash and type:
 ```
-    git clone https://github.com/farithadnan/WiseIlmu.git
+  git clone https://github.com/farithadnan/WiseIlmu.git
 ```
 
 **Step 2: Installation** 
@@ -31,7 +31,7 @@ Ensure that the configuration file (e.g., config.yaml) contains essential settin
 
 Activate your Python environment and execute the main Python script:
 ```bash
-python app.py
+  python app.py
 ```
 
 This will initialize the chatbot using the configured settings and launch a Gradio-based interface for interacting with the OpenAI-based chatbot.
