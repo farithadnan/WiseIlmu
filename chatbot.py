@@ -42,13 +42,20 @@ class ChatBot:
         '''
         Launches the chatbot.
         '''
-        iface = gr.Interface(
-            fn=self.setup(),
-            inputs=gr.components.Textbox(lines=7, label="Question From User", placeholder="Enter your question here"),
-            outputs=[gr.components.Textbox(label="Answer"), gr.components.Textbox(label="Total Words"), 
-                     gr.components.Textbox(label="Total Tokens"), gr.components.Textbox(label="Estimated Cost")],
-            title="🤖Chatbot (OpenAI)"
-        )
+        input_field = gr.components.Textbox(lines=7, label="🗣️ Question From User", placeholder="Enter your question here")
+        answer_field = gr.components.Textbox(lines=7, label="🧠 Response From Chatbot", placeholder="Chatbot's response will appear here")
+        total_words_field = gr.components.Number(label="Total Words", show_label=True)
+        total_tokens_field = gr.components.Number(label="Total Tokens", show_label=True)
+        estimated_cost_field = gr.components.Number(label="Estimated Cost ($)", show_label=True)
+
+        with gr.Blocks(title="AI Chatbot") as iface:
+            gr.Interface(
+                fn=self.setup(),
+                inputs=input_field,
+                outputs=[answer_field, total_words_field, total_tokens_field, estimated_cost_field],
+                title="🤖 OpenAI Powered Knowledge Base"
+            )
+
         iface.launch()
 
     def check_tokens(self, prompt: str, completion: str):
