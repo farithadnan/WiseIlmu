@@ -21,8 +21,11 @@ Install the required Python packages by running below command on your terminal:
 **Step 3: Configuration Setup**
 
 Ensure that the configuration file (e.g., config.yaml) contains essential settings such as:
-- Paths to directories containing documents.
-- Model and embedding details.
+- Paths to directories containing documents in `app.py`
+```python
+        document_dir = os.path.join(current_dir, "documents")
+```
+- LLM Model and embedding details.
 
 **Step 4: Run the Project**
 
