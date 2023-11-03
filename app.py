@@ -14,8 +14,9 @@ def main(cfg: DictConfig):
         document_dir = os.path.join(current_dir, "documents")
 
         # Setup & launch the chatbot
-        chatbot = ChatBot().setup_chatbot(cfg, document_dir, cfg.embeddings.model)
-        chatbot.launch_chatbot(chatbot)
+        chatbotHandler = ChatBot()
+        chatbot = chatbotHandler.setup_chatbot(cfg, document_dir, cfg.embeddings.model)
+        chatbotHandler.launch_chatbot(chatbot=chatbot)
     
     except Exception as e:
         logger.exception(e)

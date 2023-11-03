@@ -4,7 +4,7 @@ from omegaconf import DictConfig
 from loader import DocHandler
 
 class ChatBot: 
-    def launch_chatbot(chatbot):
+    def launch_chatbot(self, chatbot):
         try:
             iface = gr.Interface(
                 fn=chatbot,
@@ -16,7 +16,7 @@ class ChatBot:
         except Exception as e:
             print(f"Error while launching the chatbot: {e}")
 
-    def setup_chatbot(cfg: DictConfig, document_dir: str, embedding_model: str):
+    def setup_chatbot(self, cfg: DictConfig, document_dir: str, embedding_model: str):
         '''
         Sets up the chatbot.
 
@@ -45,7 +45,6 @@ class ChatBot:
                     return answer
                 except Exception as e:
                     raise RuntimeError(f"Error processing chatbot request: {e}")
-                    return "Sorry, an error occurred. Please try again."
 
             return chatbot
         except Exception as e:
