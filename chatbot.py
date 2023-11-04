@@ -1,5 +1,5 @@
-import gradio as gr
 import tiktoken
+import gradio as gr
 from llm_openai import OpenAIHandler
 from omegaconf import DictConfig
 from loader import DocHandler
@@ -7,6 +7,8 @@ from loader import DocHandler
 class ChatBot: 
     def __init__(self, cfg: DictConfig):
         self.cfg = cfg
+        self.temperature = cfg.openAI.temperature
+        self.max_tokens = cfg.openAI.max_tokens
         self.chat_cost_per_1000_tokens = cfg.openAI.chat_cost_per_1000_tokens
 
     def setup(self):
@@ -21,9 +23,9 @@ class ChatBot:
             docHandler = DocHandler(self.cfg)
             db = docHandler.get_vector_db()
 
-            def chatbot(input_text):
+            def chatbot(input_text, temperature, max_tokens):
                 # Initialize Q & A chain for OpenAI
-                openAI = OpenAIHandler(self.cfg)
+                openAI = OpenAIHandler(self.cfg, temperature, max_tokens)
                 qa = openAI.setup_chain()
 
                 # Get matching documents based on input text
@@ -36,13 +38,19 @@ class ChatBot:
 
             return chatbot
         except Exception as e:
+            gr.Error(f"Error while setting up the chatbot: {e}")
             raise RuntimeError(f"Error while setting up the chatbot: {e}")
 
     def launch(self):
         '''
         Launches the chatbot.
         '''
+        # Input fields
         input_field = gr.components.Textbox(lines=7, label="🗣️ Question From User", placeholder="Enter your question here")
+        temp_field = gr.components.Slider(minimum=0, maximum=2, step=0.1, label="Temperature", show_label=True, value=self.temperature)
+        max_tokens_field = gr.components.Slider(minimum=1, maximum=4096, step=1, label="Maximum Output Length", show_label=True, value=self.max_tokens)
+
+        # Output fields
         answer_field = gr.components.Textbox(lines=7, label="🧠 Response From Chatbot", placeholder="Chatbot's response will appear here")
         total_words_field = gr.components.Number(label="Total Words", show_label=True)
         total_tokens_field = gr.components.Number(label="Total Tokens", show_label=True)
@@ -51,7 +59,7 @@ class ChatBot:
         with gr.Blocks(title="AI Chatbot") as iface:
             gr.Interface(
                 fn=self.setup(),
-                inputs=input_field,
+                inputs=[input_field, temp_field, max_tokens_field],
                 outputs=[answer_field, total_words_field, total_tokens_field, estimated_cost_field],
                 title="🤖 OpenAI Powered Knowledge Base"
             )
