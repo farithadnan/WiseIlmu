@@ -1,6 +1,6 @@
 # WiseIlmu 🧠
 
-WiseIlmu is a Python application that leverages large language models (LLMs) like OpenAI and the langchain library to load and split documents into chunks. WiseIlmu also uses the [sentence-transformers model (all-MiniLM-L6-v2)](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) to convert document chunks into a vector space format, which helps LLMs to better understand the content of documents. The vector space of the documents is then stored in memory by [Chroma](https://docs.trychroma.com/) allowing its utilization throughout the application's runtime for seamless querying.
+WiseIlmu is a Python application that leverages large language model (LLM) like OpenAI and the langchain library to load and split documents into chunks. WiseIlmu also uses the [sentence-transformers model (all-MiniLM-L6-v2)](https://huggingface.co/sentence-transformers/all-MiniLM-L6-v2) to convert document chunks into a vector space format, which helps LLMs to better understand the content of documents. The vector space of the documents is then stored in memory by [Chroma](https://docs.trychroma.com/) allowing its utilization throughout the application's runtime for seamless querying.
 
 ## How to Run the Project 🏃🏽‍♂️
 
