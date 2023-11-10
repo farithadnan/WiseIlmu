@@ -3,6 +3,7 @@ import gradio as gr
 from llm_openai import OpenAIHandler
 from omegaconf import DictConfig
 from loader import DocHandler
+from halo import Halo
 
 class ChatBot: 
     def __init__(self, cfg: DictConfig):
@@ -10,6 +11,7 @@ class ChatBot:
         self.temperature = cfg.openAI.temperature
         self.max_tokens = cfg.openAI.max_tokens
         self.chat_cost_per_1000_tokens = cfg.openAI.chat_cost_per_1000_tokens
+        self.bot_persona = cfg.openAI.chatbot_persona
 
     def setup(self):
         '''
@@ -23,10 +25,20 @@ class ChatBot:
             docHandler = DocHandler(self.cfg)
             db = docHandler.get_vector_db()
 
-            def chatbot(input_text, temperature, max_tokens):
+            def chatbot(input_text, system_text, temperature, max_tokens):
+                # Creat a loading spinner
+                spinner = Halo(text="Loading...", spinner="dots")
+                spinner.start()
+
+                message = [
+                    {"role": "system", "content": system_text.value}
+                ]
+
+                message.append({"role": "user", "content": input_text })
+
                 # Initialize Q & A chain for OpenAI
                 openAI = OpenAIHandler(self.cfg, temperature, max_tokens)
-                qa = openAI.setup_chain()
+                qa = openAI.setup_chain(message) # add message here
 
                 # Get matching documents based on input text
                 matching_docs = db.similarity_search(input_text)
@@ -34,7 +46,10 @@ class ChatBot:
 
                 # Fetch total word count, total token count, and estimated cost
                 total_word_count, total_token_count, estimated_cost = self.check_tokens(input_text, answer)
-                return answer, total_word_count, total_token_count, estimated_cost
+
+                # Stop the loading spinner
+                spinner.stop()
+                return answer['choices'][0]['message'], total_word_count, total_token_count, estimated_cost
 
             return chatbot
         except Exception as e:
@@ -46,6 +61,7 @@ class ChatBot:
         Launches the chatbot.
         '''
         # Input fields
+        system_field = gr.components.Textbox(lines=7, label="💅🏽 Chatbot Persona", placeholder="Enter chatbot's persona", value=self.bot_persona)
         input_field = gr.components.Textbox(lines=7, label="🗣️ Question From User", placeholder="Enter your question here")
         temp_field = gr.components.Slider(minimum=0, maximum=2, step=0.1, label="Temperature", show_label=True, value=self.temperature)
         max_tokens_field = gr.components.Slider(minimum=1, maximum=4096, step=1, label="Maximum Output Length", show_label=True, value=self.max_tokens)
@@ -56,13 +72,20 @@ class ChatBot:
         total_tokens_field = gr.components.Number(label="Total Tokens", show_label=True)
         estimated_cost_field = gr.components.Number(label="Estimated Cost ($)", show_label=True)
 
-        with gr.Blocks(title="AI Chatbot") as iface:
-            gr.Interface(
-                fn=self.setup(),
-                inputs=[input_field, temp_field, max_tokens_field],
-                outputs=[answer_field, total_words_field, total_tokens_field, estimated_cost_field],
-                title="🤖 OpenAI Powered Knowledge Base"
-            )
+        iface = gr.ChatInterface(
+            fn=self.setup(),
+            title="🤖 OpenAI Powered Knowledge Base",
+            additional_inputs=[system_field, temp_field, max_tokens_field],
+        )
+
+
+        # with gr.Blocks(title="AI Chatbot") as iface:
+        #     gr.Interface(
+        #         fn=self.setup(),
+        #         inputs=[input_field, temp_field, max_tokens_field],
+        #         outputs=[answer_field, total_words_field, total_tokens_field, estimated_cost_field],
+        #         title="🤖 OpenAI Powered Knowledge Base"
+        #     )
 
         iface.launch()
 

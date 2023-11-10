@@ -1,3 +1,6 @@
+from pyexpat import model
+import re
+import openai
 from omegaconf import DictConfig
 from langchain.chat_models import ChatOpenAI
 from langchain.chains.question_answering import load_qa_chain
@@ -9,7 +12,7 @@ class OpenAIHandler:
         self.temperature = temperature
         self.max_tokens = max_tokens
 
-    def setup_chain(self, chain_type="stuff", verbose="false"):
+    def setup_chain(self, messages: any, chain_type="stuff", verbose="false"):
         '''
         Sets up the Q & A chain.
 
@@ -20,10 +23,10 @@ class OpenAIHandler:
         Returns:
             The Q & A chain.
         '''
-        llm = self.load_model()
+        llm = self.load_model(messages)
         return load_qa_chain(llm=llm, chain_type=chain_type, verbose=verbose)
 
-    def load_model(self):
+    def load_model(self, messages: any):
         '''
         Loads the OpenAI model.
 
@@ -31,8 +34,18 @@ class OpenAIHandler:
             The OpenAI model.
         '''
         try:
-            openAI = self.cfg.openAI
-            return ChatOpenAI(openai_api_key=openAI.api_key, model_name=openAI.model, 
+            config = self.cfg.openAI
+            response = openai.ChatCompletion.create(
+                model=config.model,
+                messages=messages,
+                temperature=self.temperature,
+                max_tokens=self.max_tokens,
+            )
+            
+
+            return response
+
+            return ChatOpenAI(openai_api_key=config.api_key, model_name=config.model, 
                                 temperature=self.temperature, max_tokens=self.max_tokens)
         except (AttributeError, KeyError) as e:
             raise ValueError(f"Invalid or missing configuration: {e}")
