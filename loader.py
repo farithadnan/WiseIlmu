@@ -10,45 +10,34 @@ class DocHandler:
 
     def get_vector_db(self, chunk_size=1000, chunk_overlap=20):
         '''
-        Fetch vector representation of the documents in the directory.
+        Get VectorStore (db) from list of documents.
 
         Args:
             chunk_size (int): The size of the chunks. 
             chunk_overlap (int): The overlap between the chunks.
 
         Returns:
-            Vector representation of the documents.
-        '''
-        documents = self.process_docs(chunk_size, chunk_overlap)
-        embeddings = SentenceTransformerEmbeddings(model_name=self.embedding_model)
-        db = Chroma.from_documents(documents, embeddings)
-        return db
-
-
-
-    def process_docs(self, chunk_size=1000, chunk_overlap=20):
-        '''
-        Load & split the documents into smaller chunks.
-
-        Args:
-            chunk_size (int): The size of the chunks.
-            chunk_overlap (int): The overlap between the chunks.
-
-        Returns:
-            List of documents.
+            Chroma VectorStore.
         '''
         try:
+            
             # Load documents
             loader = DirectoryLoader(self.documents_dir)
-            documents = loader.load()
+            loaded_dir = loader.load()
+
             # Split documents into chunks
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-            docs = text_splitter.split_documents(documents=documents)
+            documents = text_splitter.split_documents(documents=loaded_dir)
 
-            return docs
+            # Convert to vector space
+            embeddings = SentenceTransformerEmbeddings(model_name=self.embedding_model)
+            db = Chroma.from_documents(documents, embeddings)
+            return db
+        
         except FileNotFoundError as e:
             raise FileNotFoundError(f"Directory {self.documents_dir} not found: {e}")
         except Exception as e:
             raise RuntimeError(f"Error while loading & splitting the documents: {e}")
+
 
     
