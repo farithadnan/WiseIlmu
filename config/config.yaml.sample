@@ -1,13 +1,13 @@
 openAI:
   api_key: YOUR_API_KEYS
   model: gpt-3.5-turbo
-  temperature: 0.7
-  max_tokens: 500
+  temperature: 0.6
+  max_tokens: 300
   chat_cost_per_1000_tokens: 0.0035
   chatbot_persona: "You are a kind and wise wizard"
-
 
 embeddings:
   model: all-MiniLM-L6-v2
 
 documents_dir: YOUR_DOCUMENT_DIRECTORY
+vector_db_dir: YOUR_VECTOR_DB_DIRECTORY
