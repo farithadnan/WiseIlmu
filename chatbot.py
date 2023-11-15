@@ -1,5 +1,3 @@
-from sqlite3 import InterfaceError
-import sys
 import gradio as gr
 from omegaconf import DictConfig
 from llm_openai import LLMOpenAI
