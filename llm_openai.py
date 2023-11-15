@@ -45,6 +45,17 @@ class LLMOpenAI:
         return load_qa_chain(llm=llm)
     
     def generate_response(self, vector_db: Chroma, qa_chain: BaseCombineDocumentsChain, messages):
+        '''
+        Method to generate a response from the chatbot.
+
+        Args:
+            vector_db: The vector database.
+            qa_chain: The Q & A chain.
+            messages: The messages sent by the user.
+
+        Returns:
+            The chatbot's response.
+        '''
         
         # Create a loading spinner
         spinner = Halo(text='Loading...', spinner='dots')
