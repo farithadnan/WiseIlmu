@@ -73,11 +73,11 @@ class ChatBot:
             for res in results['documents'][0]:
                 messages.append({"role": "assistant", "content": f"previous chat: {res}"})
 
+            # Get the current ID
             if len(results['ids'][0]) > 0:
                 max_id_string = max(results['ids'][0], key=lambda x: int(x.split("_")[1]))
                 max_id_number = int(max_id_string.split("_")[1])
                 current_id = max_id_number
-
 
             # append log of user's input to the messages
             messages.append({"role": "user", "content": input_text})            
