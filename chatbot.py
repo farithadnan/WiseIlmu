@@ -1,3 +1,4 @@
+from sqlite3 import InterfaceError
 import sys
 import gradio as gr
 from omegaconf import DictConfig
@@ -18,14 +19,14 @@ class ChatBot:
         temp_field = gr.components.Slider(minimum=0, maximum=2, step=0.1, label="Temperature", show_label=True, value=self.temperature)
         max_tokens_field = gr.components.Slider(minimum=1, maximum=4096, step=1, label="Maximum Output Length", show_label=True, value=self.max_tokens)
 
-        with gr.Blocks(title="AI Chatbot") as iface:
+        with gr.Blocks(title="AI Chatbot") as interface:
             gr.ChatInterface(
                 fn=self.chat_engine(),
                 title="🤖 OpenAI Powered Knowledge Base",
                 additional_inputs= [temp_field, max_tokens_field],
             )
         
-        iface.launch()
+        interface.launch()
 
     def chat_engine(self):
         '''
@@ -61,13 +62,6 @@ class ChatBot:
             # Add persona to the bot
             messages = [{"role": "system", "content": self.cfg.openAI.chat_persona}]
             
-            # Exit the app if the user types "exit" or "quit"
-            if input_text == "exit" or input_text == "quit":
-                print('Exiting...')
-                sys.exit()
-            if input_text == '':
-                pass
-            
             # Get the previous chat history
             results = collection.query(
                 query_texts=[input_text],
@@ -77,7 +71,13 @@ class ChatBot:
 
             # append the query result of previous chat into the messages
             for res in results['documents'][0]:
-                messages.append({"role": "user", "content": f"previous chat: {res}"})
+                messages.append({"role": "assistant", "content": f"previous chat: {res}"})
+
+            if len(results['ids'][0]) > 0:
+                max_id_string = max(results['ids'][0], key=lambda x: int(x.split("_")[1]))
+                max_id_number = int(max_id_string.split("_")[1])
+                current_id = max_id_number
+
 
             # append log of user's input to the messages
             messages.append({"role": "user", "content": input_text})            
@@ -99,5 +99,5 @@ class ChatBot:
             )
 
             return response
-        
+    
         return chatbot
