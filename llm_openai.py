@@ -71,7 +71,7 @@ class LLMOpenAI:
         # Stop the spinner once the response is received
         spinner.stop()
 
-        # Pretty-print the user message sent to the AI
+        # Testing - Pretty-print the user message sent to the AI
         pp = pprint.PrettyPrinter(indent=4)
         print("Request:")
         pp.pprint(messages)
