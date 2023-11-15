@@ -35,3 +35,23 @@ Activate your Python environment and execute the main Python script:
 ```
 
 This will initialize the chatbot using the configured settings and launch a Gradio-based interface for interacting with the OpenAI-based chatbot.
+
+## Directory Structure 📂
+
+Below shows the directory structure for this project. Keep in mind that outputs will be created automatically by Hydra itself. This folder will store logs for the project.
+```bash
+.
+├── config                  # Configuration
+│   └── config.yaml
+├── data		    # Vector database
+├── documents               # Files (pdf, docs, csv and etc.)
+├── outputs                 # Log folder created by Hydra
+├── venv                    # Virtual environtment
+├── .gitignore              # gitignore
+├── app.py                  # Main script
+├── chatbot.py              # Script to handle conversation via Gradio
+├── llm_openai.py           # Script to handle interaction with OpenAI
+├── loader.py               # Script to handle vector database
+├── README.md               # Project Info
+└── requirements.txt        # List of required libraries
+```
