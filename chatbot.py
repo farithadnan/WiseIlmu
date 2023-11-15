@@ -7,14 +7,13 @@ from langchain.chains.combine_documents.base import BaseCombineDocumentsChain
 
 
 from llm_openai import LLMOpenAI
+from loader import Loader
 
 class ChatBot:
-    def __init__(self, cfg: DictConfig, collection: Collection, 
-                 vector_db: Chroma, qa_chain: BaseCombineDocumentsChain,):
+    def __init__(self, cfg: DictConfig):
         self.cfg = cfg
-        self.collection = collection
-        self.vector_db = vector_db
-        self.qa_chain = qa_chain
+        self.temperature = cfg.openAI.temperature
+        self.max_tokens = cfg.openAI.max_tokens
     
     def launch(self):
 
@@ -33,10 +32,28 @@ class ChatBot:
 
     def chat_engine(self):
 
-        def chatbot(input_text, history):
+        # Load documents
+        documents_handler = Loader()
+        documents = documents_handler.load_documents(self.cfg.documents_dir)
+
+        # Split documents into chunks
+        documents = documents_handler.split_documents(documents)
+
+        # Create Chroma DB
+        vector_db = documents_handler.create_vector_db(documents, self.cfg)
+        
+        # Load/Create collection 
+        collection = documents_handler.load_collection(self.cfg.vector_db_dir)
+
+        def chatbot(input_text, history, temperature, max_tokens):
             chat_history = []
             chat_metadata = []
             history_ids = []
+            current_id = 0
+
+            # Create Chain
+            openai_handler = LLMOpenAI(cfg=self.cfg, temperature=temperature, max_tokens=max_tokens)
+            qa_chain = openai_handler.get_qa_chain()
 
             messages = [{"role": "system", "content": self.cfg.openAI.chat_persona}]
 
@@ -46,8 +63,7 @@ class ChatBot:
             if input_text == '':
                 pass
 
-
-            results = self.collection.query(
+            results = collection.query(
                 query_texts=[input_text],
                 where={"role": "assistant"},
                 n_results=2
@@ -58,10 +74,8 @@ class ChatBot:
                 messages.append({"role": "user", "content": f"previous chat: {res}"})
 
             # Add the user's input to the messages
-            messages.append({"role": "user", "content": input_text})
-            
-            openai_handler = LLMOpenAI()
-            response = openai_handler.generate_response(self.vector_db, self.qa_chain, messages)
+            messages.append({"role": "user", "content": input_text})            
+            response = openai_handler.generate_response(vector_db, qa_chain, messages)
 
             # Update chat history & metadata
             chat_metadata.extend([{"role":"user"}, {"role": "assistant"}])
@@ -72,10 +86,12 @@ class ChatBot:
             history_ids.extend([f"id_{current_id}", f"id_{current_id + 1}"])
 
             # Add the conversation to the collection
-            self.collection.add(
+            collection.add(
                 documents=chat_history,
                 metadatas=chat_metadata,
                 ids=history_ids
             )
+
+            return response
         
         return chatbot
