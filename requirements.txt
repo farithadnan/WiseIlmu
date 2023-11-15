@@ -62,7 +62,7 @@ jsonschema==4.19.2
 jsonschema-specifications==2023.7.1
 kiwisolver==1.4.5
 kubernetes==28.1.0
-langchain==0.0.329
+langchain==0.0.327
 langdetect==1.0.9
 langsmith==0.0.54
 layoutparser==0.3.4
@@ -114,6 +114,7 @@ pydantic_core==2.10.1
 pydub==0.25.1
 Pygments==2.16.1
 pyparsing==3.1.1
+pypdf==3.17.0
 pypdfium2==4.23.1
 PyPika==0.48.9
 pyreadline3==3.4.1
