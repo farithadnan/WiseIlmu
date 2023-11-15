@@ -1,54 +1,111 @@
-from langchain.document_loaders import DirectoryLoader
+import os
+import chromadb
+from omegaconf import DictConfig
+from langchain.vectorstores.chroma import Chroma
+from langchain.document_loaders import CSVLoader
+from langchain.document_loaders import TextLoader
+from langchain.document_loaders import PyPDFLoader
+from langchain.document_loaders import Docx2txtLoader
+from chromadb.errors import InvalidDimensionException
+from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.embeddings.sentence_transformer import SentenceTransformerEmbeddings
-from langchain.vectorstores.chroma import Chroma
 
-class DocHandler:
-    def __init__ (self, cfg):
-        self.documents_dir = cfg.documents_dir
-        self.embedding_model = cfg.embeddings.model
+class Loader:
+    def __init__(self):
+        pass
 
-    def get_vector_db(self, chunk_size=1000, chunk_overlap=20):
+    def load_documents(self, documents_dir: str):
         '''
-        Fetch vector representation of the documents in the directory.
+        Method to load documents from a directory.
 
         Args:
+            documents_dir (str): The directory containing the documents.
+        Returns:
+            A list of documents objects.
+        '''
+        documents = []
+        for file in os.listdir(documents_dir):
+            try:
+                if file.endswith(".pdf"):
+                    pdf_path = os.path.join(documents_dir, file)
+                    loader = PyPDFLoader(pdf_path)
+                    documents.extend(loader.load())
+                elif file.endswith(".docx"):
+                    docx_path = os.path.join(documents_dir, file)
+                    loader =  Docx2txtLoader(docx_path)
+                    documents.extend(loader.load())
+                elif file.endswith(".txt"):
+                    txt_path = os.path.join(documents_dir, file)
+                    loader = TextLoader(txt_path)
+                    documents.extend(loader.load())
+                elif file.endswith(".csv"):
+                    csv_path = os.path.join(documents_dir, file)
+                    loader = CSVLoader(csv_path)
+                    documents.extend(loader.load())
+                else:
+                    raise ValueError(f"Unsupported file format: {file}")
+            except Exception as e:
+                raise RuntimeError(f"Error while loading & splitting the documents: {e}")
+        
+        return documents
+    
+
+    def split_documents(self, documents: list, chunk_size=1000, chunk_overlap=20):
+        '''
+        Method to split documents into smaller chunks.
+
+        Args:
+            documents (list): The list of documents.
             chunk_size (int): The size of the chunks. 
             chunk_overlap (int): The overlap between the chunks.
 
         Returns:
-            Vector representation of the documents.
-        '''
-        documents = self.process_docs(chunk_size, chunk_overlap)
-        embeddings = SentenceTransformerEmbeddings(model_name=self.embedding_model)
-        db = Chroma.from_documents(documents, embeddings)
-        return db
-
-
-
-    def process_docs(self, chunk_size=1000, chunk_overlap=20):
-        '''
-        Load & split the documents into smaller chunks.
-
-        Args:
-            chunk_size (int): The size of the chunks.
-            chunk_overlap (int): The overlap between the chunks.
-
-        Returns:
-            List of documents.
+            A list of chunked documents.
         '''
         try:
-            # Load documents
-            loader = DirectoryLoader(self.documents_dir)
-            documents = loader.load()
-            # Split documents into chunks
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
-            docs = text_splitter.split_documents(documents=documents)
-
-            return docs
-        except FileNotFoundError as e:
-            raise FileNotFoundError(f"Directory {self.documents_dir} not found: {e}")
+            documents = text_splitter.split_documents(documents=documents)
+            return documents
         except Exception as e:
-            raise RuntimeError(f"Error while loading & splitting the documents: {e}")
+            raise RuntimeError(f"Error while splitting the documents: {e}")
+        
 
+    def create_vector_db(self, documents, cfg: DictConfig):
+        '''
+        Method to get the vector database.
+
+        Args:
+            documents (list): The list of documents.
+            cfg (DictConfig): The configuration file.
+        
+        Returns:
+            The vector database.
+        '''
+        # Instantiate SentenceTransformerEmbeddings
+        embeddings = SentenceTransformerEmbeddings(model_name=cfg.embeddings.model)
+
+        # Get vector from documents, if the dimension is invalid, delete the collection and try again
+        try:
+            vector_db = Chroma.from_documents(documents=documents,embedding=embeddings, persist_directory=cfg.vector_db_dir)
+        except InvalidDimensionException:
+            Chroma().delete_collection()
+            vector_db = Chroma.from_documents(documents=documents,embedding=embeddings, persist_directory=cfg.vector_db_dir)
+
+        return vector_db
     
+
+    def load_collection(self, vector_db_dir: str, collection_name="conversations"):
+        '''
+        Method to create or load a collection.
+
+        Args:
+            vector_db_dir (str): The directory containing the vector database.
+
+        Return the collection.
+        '''
+        embedding_function = ONNXMiniLM_L6_V2()
+        chroma_client = chromadb.PersistentClient(path=vector_db_dir)
+        collection = chroma_client.get_or_create_collection(name=collection_name, embedding_function=embedding_function)
+
+        return collection  

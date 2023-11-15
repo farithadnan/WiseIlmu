@@ -13,4 +13,6 @@ __pycache__/
 # Logs
 /outputs
 /flagged/*
+/temp/
+/data/
 
