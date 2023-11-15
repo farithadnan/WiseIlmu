@@ -87,14 +87,21 @@ class ChatBot:
 
             # Update history IDs
             current_id += 1
-            history_ids.extend([f"id_{current_id}", f"id_{current_id + 1}"])
 
-            # Add the conversation to the collection
-            collection.add(
-                documents=chat_history,
-                metadatas=chat_metadata,
-                ids=history_ids
-            )
+            # Check if the document with the same ID already exists
+            existing_document = None
+            for res in results['ids'][0]:
+                if f"id_{current_id}" in res:
+                    existing_document = res
+                    break
+
+            if not existing_document:
+                history_ids.extend([f"id_{current_id}", f"id_{current_id + 1}"])
+                collection.add(
+                    documents=chat_history,
+                    metadatas=chat_metadata,
+                    ids=history_ids
+                )
 
             return response
     
