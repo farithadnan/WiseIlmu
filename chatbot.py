@@ -1,11 +1,6 @@
 import sys
 import gradio as gr
-from chromadb import Collection
 from omegaconf import DictConfig
-from langchain.vectorstores.chroma import Chroma
-from langchain.chains.combine_documents.base import BaseCombineDocumentsChain
-
-
 from llm_openai import LLMOpenAI
 from loader import Loader
 
@@ -16,7 +11,9 @@ class ChatBot:
         self.max_tokens = cfg.openAI.max_tokens
     
     def launch(self):
-
+        '''
+        Method to launch the chatbot.
+        '''
         # Input fields
         temp_field = gr.components.Slider(minimum=0, maximum=2, step=0.1, label="Temperature", show_label=True, value=self.temperature)
         max_tokens_field = gr.components.Slider(minimum=1, maximum=4096, step=1, label="Maximum Output Length", show_label=True, value=self.max_tokens)
@@ -31,6 +28,12 @@ class ChatBot:
         iface.launch()
 
     def chat_engine(self):
+        '''
+        Method to handle the conversation between the user and the chatbot.
+
+        Returns:
+            A function that takes the user's input and returns the chatbot's response.
+        '''
 
         # Load documents
         documents_handler = Loader()
@@ -55,25 +58,28 @@ class ChatBot:
             openai_handler = LLMOpenAI(cfg=self.cfg, temperature=temperature, max_tokens=max_tokens)
             qa_chain = openai_handler.get_qa_chain()
 
+            # Add persona to the bot
             messages = [{"role": "system", "content": self.cfg.openAI.chat_persona}]
-
+            
+            # Exit the app if the user types "exit" or "quit"
             if input_text == "exit" or input_text == "quit":
                 print('Exiting...')
                 sys.exit()
             if input_text == '':
                 pass
-
+            
+            # Get the previous chat history
             results = collection.query(
                 query_texts=[input_text],
                 where={"role": "assistant"},
                 n_results=2
             )
 
-            # append the query result into the messages
+            # append the query result of previous chat into the messages
             for res in results['documents'][0]:
                 messages.append({"role": "user", "content": f"previous chat: {res}"})
 
-            # Add the user's input to the messages
+            # append log of user's input to the messages
             messages.append({"role": "user", "content": input_text})            
             response = openai_handler.generate_response(vector_db, qa_chain, messages)
 
