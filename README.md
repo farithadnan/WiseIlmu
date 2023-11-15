@@ -44,7 +44,10 @@ Below shows the directory structure for this project. Keep in mind that outputs 
 ├── config                  # Configuration
 │   └── config.yaml
 ├── data		    # Vector database
-├── documents               # Files (pdf, docs, csv and etc.)
+├── documents               # Folder to store user's files (pdf, docs, csv and etc.)
+│   ├── file1.pdf
+│   ├── file2.docx
+│   └── files3.csv
 ├── outputs                 # Log folder created by Hydra
 ├── venv                    # Virtual environtment
 ├── .gitignore              # gitignore
