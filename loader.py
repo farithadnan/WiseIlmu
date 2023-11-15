@@ -1,5 +1,6 @@
 import os
 import chromadb
+from halo import Halo
 from omegaconf import DictConfig
 from langchain.vectorstores.chroma import Chroma
 from langchain.document_loaders import CSVLoader
@@ -24,6 +25,9 @@ class Loader:
         Returns:
             A list of documents objects.
         '''
+        spinner = Halo(text='Fetching Files...\n', spinner='dots')
+        spinner.start()     
+
         documents = []
         for file in os.listdir(documents_dir):
             try:
@@ -48,6 +52,8 @@ class Loader:
             except Exception as e:
                 raise RuntimeError(f"Error while loading & splitting the documents: {e}")
         
+        # Stop the spinner once the response is received
+        spinner.stop()
         return documents
     
 
@@ -64,8 +70,15 @@ class Loader:
             A list of chunked documents.
         '''
         try:
+            # Create a loading spinner
+            spinner = Halo(text='Splitting File Into Chunk...\n', spinner='dots')
+            spinner.start()  
+
             text_splitter = RecursiveCharacterTextSplitter(chunk_size=chunk_size, chunk_overlap=chunk_overlap)
             documents = text_splitter.split_documents(documents=documents)
+
+            # Stop the spinner once the response is received
+            spinner.stop()
             return documents
         except Exception as e:
             raise RuntimeError(f"Error while splitting the documents: {e}")
@@ -82,8 +95,17 @@ class Loader:
         Returns:
             The vector database.
         '''
+        yellow = "\033[0;33m"
+
+        print(f"{yellow}\n--------------------------------------------------")
+        print(f"{yellow}           Configuring Vector Database                ")
+        print(f"{yellow}--------------------------------------------------")
+
+        spinner = Halo(text='\n', spinner='dots')
+        spinner.start()  
         # Instantiate SentenceTransformerEmbeddings
         embeddings = SentenceTransformerEmbeddings(model_name=cfg.embeddings.model)
+        spinner.stop()
 
         # Get vector from documents, if the dimension is invalid, delete the collection and try again
         try:
@@ -92,6 +114,7 @@ class Loader:
             Chroma().delete_collection()
             vector_db = Chroma.from_documents(documents=documents,embedding=embeddings, persist_directory=cfg.vector_db_dir)
 
+        print(f"{yellow}--------------------------------------------------\n")
         return vector_db
     
 
@@ -104,8 +127,12 @@ class Loader:
 
         Return the collection.
         '''
+        spinner = Halo(text='Configuring collection...\n', spinner='dots')
+        spinner.start()  
+
         embedding_function = ONNXMiniLM_L6_V2()
         chroma_client = chromadb.PersistentClient(path=vector_db_dir)
         collection = chroma_client.get_or_create_collection(name=collection_name, embedding_function=embedding_function)
 
+        spinner.stop()
         return collection  

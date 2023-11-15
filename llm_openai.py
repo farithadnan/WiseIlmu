@@ -41,7 +41,12 @@ class LLMOpenAI:
         Returns:
             The Q & A chain.
         '''
+        spinner = Halo(text='Configuring Q & A Chain...', spinner='dots')
+        spinner.start()  
+
         llm = self.get_llm()
+
+        spinner.stop()
         return load_qa_chain(llm=llm)
     
     def generate_response(self, vector_db: Chroma, qa_chain: BaseCombineDocumentsChain, messages):
@@ -56,9 +61,9 @@ class LLMOpenAI:
         Returns:
             The chatbot's response.
         '''
-        
+        print("\n")
         # Create a loading spinner
-        spinner = Halo(text='Loading...', spinner='dots')
+        spinner = Halo(text='Loading Response...\n', spinner='dots')
         spinner.start()
 
         # Fetch latest user Input
