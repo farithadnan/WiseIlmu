@@ -38,7 +38,7 @@ This will initialize the chatbot using the configured settings and launch a Grad
 
 ## Directory Structure 📂
 
-Below shows the directory structure for this project. Keep in mind that outputs will be created automatically by Hydra itself. This folder will store logs for the project.
+Below shows the directory structure for this project: 
 ```bash
 .
 ├── config                  # Configuration
@@ -58,3 +58,5 @@ Below shows the directory structure for this project. Keep in mind that outputs 
 ├── README.md               # Project Info
 └── requirements.txt        # List of required libraries
 ```
+
+> *Keep in mind that the folder outputs is automatically created by Hydra itself. Outputs are responsible for storing the logs when running the project.
