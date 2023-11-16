@@ -1,4 +1,5 @@
 import pprint
+import tiktoken
 from halo import Halo
 from omegaconf import DictConfig
 from langchain.chat_models import ChatOpenAI
@@ -18,6 +19,7 @@ class LLMOpenAI:
 
         self.api_key = cfg.openAI.api_key
         self.model = cfg.openAI.model
+        self.chat_cost_per_1000_tokens = cfg.openAI.chat_cost_per_1000_tokens
 
     def get_llm(self):
         '''
@@ -61,6 +63,7 @@ class LLMOpenAI:
         Returns:
             The chatbot's response.
         '''
+        yellow = "\033[0;33m"
         print("\n")
         # Create a loading spinner
         spinner = Halo(text='Loading Response...\n', spinner='dots')
@@ -78,8 +81,52 @@ class LLMOpenAI:
 
         # Testing - Pretty-print the user message sent to the AI
         pp = pprint.PrettyPrinter(indent=4)
-        print("Request:")
+        print(f"{yellow}\n--------------------------------------------------")
+        print(f"{yellow}💫 Request:")
+        print(f"{yellow}--------------------------------------------------")
+
         pp.pprint(messages)
+
+
+        # Testing - Pretty-print chat cost
+        print(f"{yellow}--------------------------------------------------")
+        print(f"{yellow}💰 Chat Cost:")
+        print(f"{yellow}--------------------------------------------------")
+
+
+        total_word_count, total_token_count, estimated_cost = self.estimate_cost(latest_input["content"], answer)
+
+        print(f"{yellow}Total Word Count: {total_word_count}")
+        print(f"{yellow}Total Token Count: {total_token_count}")
+        print(f"{yellow}Estimated Cost: ${estimated_cost}")
+        print(f"{yellow}--------------------------------------------------")
+
 
         return answer
 
+    def estimate_cost(self, user_input: str, bot_response: str):
+        '''
+        Method to estimate the cost of a chat.
+        
+        Args:
+            user_input (str): The user's input.
+            bot_response (str): The chatbot's response.
+        
+        Returns:
+            The estimated cost, total word count, and total token count.
+        '''
+        # Create a loading spinner
+        spinner = Halo(text='Estimating Cost...\n', spinner='dots')
+        spinner.start()
+
+        # Get the total token count
+        combined_text = user_input + " " + bot_response
+        encoded = tiktoken.encoding_for_model(self.model)
+        total_token_count = len(encoded.encode(combined_text))
+
+        # Calculate estimated cost for chat
+        estimated_cost = "{:.10f}".format(total_token_count * self.chat_cost_per_1000_tokens/1000)
+        total_word_count = len(combined_text.split())
+
+        spinner.stop()
+        return total_word_count, total_token_count, estimated_cost
