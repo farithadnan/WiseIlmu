@@ -38,7 +38,7 @@ frozenlist==1.4.0
 fsspec==2023.10.0
 google-auth==2.23.3
 googleapis-common-protos==1.61.0
-gradio==4.0.2
+gradio==4.11.0
 gradio_client==0.7.0
 greenlet==3.0.1
 grpcio==1.59.2
